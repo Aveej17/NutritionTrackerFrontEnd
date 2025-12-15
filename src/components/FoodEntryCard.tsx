@@ -1,5 +1,5 @@
 import { FoodEntry } from '@/types/nutrition';
-import { Utensils, Coffee, Sun, Moon, Cookie } from 'lucide-react';
+import { Coffee, Sun, Moon, Cookie } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface FoodEntryCardProps {
@@ -30,12 +30,22 @@ export function FoodEntryCard({ entry, delay = 0 }: FoodEntryCardProps) {
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex items-start gap-4">
-        <div className={cn(
-          'w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110',
-          mealColors[entry.mealType]
-        )}>
-          <Icon className="w-5 h-5" />
-        </div>
+        {entry.photo ? (
+          <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 transition-transform group-hover:scale-110">
+            <img 
+              src={entry.photo} 
+              alt={entry.name} 
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className={cn(
+            'w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110',
+            mealColors[entry.mealType]
+          )}>
+            <Icon className="w-5 h-5" />
+          </div>
+        )}
         
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
