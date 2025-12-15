@@ -8,7 +8,7 @@ export interface FoodEntry {
   date: string;
   time: string;
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-  imageUrl?: string;
+  photo?: string;
 }
 
 export interface DailySummary {
