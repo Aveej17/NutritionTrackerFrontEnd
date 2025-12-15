@@ -1,159 +1,182 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+
 import { Header } from '@/components/Header';
 import { NutritionCard } from '@/components/NutritionCard';
 import { FilterTabs } from '@/components/FilterTabs';
 import { AddFoodDialog } from '@/components/AddFoodDialog';
-import { DaySummary } from '@/components/DaySummary';
-import { mockFoodEntries, dailyGoals } from '@/data/mockData';
-import { FilterPeriod, FoodEntry } from '@/types/nutrition';
+
+import { fetchFoods } from '@/api/foodApi';
 import { TrendingUp, Flame } from 'lucide-react';
 
 const Index = () => {
-  const [filter, setFilter] = useState<FilterPeriod>('today');
-  const [entries, setEntries] = useState<FoodEntry[]>(mockFoodEntries);
+  const [filter, setFilter] = useState('today');
 
-  const today = new Date().toISOString().split('T')[0];
+  /* =======================
+     Fetch foods from backend
+  ======================== */
+  const {
+    data: entries = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['foods'],
+    queryFn: fetchFoods,
+  });
 
-  const filteredEntries = useMemo(() => {
-    const now = new Date();
-    let startDate: Date;
-
-    switch (filter) {
-      case 'today':
-        startDate = new Date(now.setHours(0, 0, 0, 0));
-        break;
-      case 'week':
-        startDate = new Date(now.setDate(now.getDate() - 7));
-        break;
-      case 'month':
-        startDate = new Date(now.setDate(now.getDate() - 30));
-        break;
-    }
-
-    return entries.filter((entry) => new Date(entry.date) >= startDate);
-  }, [entries, filter]);
-
-  const todayEntries = entries.filter((e) => e.date === today);
-  const todayTotals = todayEntries.reduce(
-    (acc, entry) => ({
-      calories: acc.calories + entry.calories,
-      protein: acc.protein + entry.protein,
-      carbs: acc.carbs + entry.carbs,
-      fat: acc.fat + entry.fat,
-    }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0 }
-  );
-
-  const groupedByDate = useMemo(() => {
-    const groups: Record<string, FoodEntry[]> = {};
-    filteredEntries.forEach((entry) => {
-      if (!groups[entry.date]) {
-        groups[entry.date] = [];
-      }
-      groups[entry.date].push(entry);
-    });
-    return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
-  }, [filteredEntries]);
-
-  const handleAddFood = (newEntry: Omit<FoodEntry, 'id'>) => {
-    const entry: FoodEntry = {
-      ...newEntry,
-      id: Date.now().toString(),
-      // Simulating backend analysis with placeholder values
-      calories: Math.floor(Math.random() * 300) + 100,
-      protein: Math.floor(Math.random() * 30) + 5,
-      carbs: Math.floor(Math.random() * 40) + 10,
-      fat: Math.floor(Math.random() * 20) + 2,
-    };
-    setEntries((prev) => [entry, ...prev]);
+  /* =======================
+     Temporary Daily Goals
+     (until backend exists)
+  ======================== */
+  const dailyGoals = {
+    calories: 2000,
+    protein: 120,
+    carbs: 250,
+    fat: 70,
   };
 
-  const streak = 7; // Mock streak data
+  /* =======================
+     Totals
+  ======================== */
+  const totals = useMemo(() => {
+    return entries.reduce(
+      (acc, e) => ({
+        calories: acc.calories + (e.calories || 0),
+        protein: acc.protein + (e.protein || 0),
+        carbs: acc.carbs + (e.carbs || 0),
+        fat: acc.fat + (e.fat || 0),
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+  }, [entries]);
 
+  const streak = 7;
+
+  /* =======================
+     Loading / Error
+  ======================== */
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading your dashboard…</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-destructive">
+          Failed to load foods. Please try again.
+        </p>
+      </div>
+    );
+  }
+
+  /* =======================
+     UI
+  ======================== */
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-muted/30">
       <Header />
 
-      <main className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Welcome Section */}
-        <section className="mb-8 animate-fade-in">
-          <div className="flex items-center justify-between mb-2">
+      <main className="container mx-auto px-4 py-6 max-w-6xl">
+        {/* HEADER */}
+        <section className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <h2 className="text-2xl font-display font-bold text-foreground">Good morning! 👋</h2>
-              <p className="text-muted-foreground">Track your nutrition, reach your goals</p>
+              <h2 className="text-3xl font-bold">Welcome Cheif</h2>
+              <p className="text-muted-foreground">
+                Track your meals and stay consistent
+              </p>
             </div>
-            <div className="flex items-center gap-2 bg-warning/10 text-warning px-3 py-2 rounded-xl">
+
+            <div className="flex items-center gap-2 bg-orange-500/10 text-orange-600 px-4 py-2 rounded-xl">
               <Flame className="w-5 h-5" />
               <span className="font-semibold">{streak} day streak</span>
             </div>
           </div>
         </section>
 
-        {/* Today's Summary */}
-        <section className="mb-8">
+        {/* OVERVIEW */}
+        <section className="mb-10">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-5 h-5 text-primary" />
-            <h3 className="font-display font-semibold text-lg">Today's Progress</h3>
+            <h3 className="text-lg font-semibold">Nutrition Overview</h3>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <NutritionCard
               label="Calories"
-              value={todayTotals.calories}
+              value={totals.calories}
               goal={dailyGoals.calories}
-              unit=" kcal"
+              unit="kcal"
               color="calories"
-              delay={0}
             />
             <NutritionCard
               label="Protein"
-              value={todayTotals.protein}
+              value={totals.protein}
               goal={dailyGoals.protein}
               unit="g"
               color="protein"
-              delay={100}
             />
             <NutritionCard
               label="Carbs"
-              value={todayTotals.carbs}
+              value={totals.carbs}
               goal={dailyGoals.carbs}
               unit="g"
               color="carbs"
-              delay={200}
             />
             <NutritionCard
               label="Fat"
-              value={todayTotals.fat}
+              value={totals.fat}
               goal={dailyGoals.fat}
               unit="g"
               color="fat"
-              delay={300}
             />
           </div>
         </section>
 
-        {/* Food Log */}
-        <section>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <h3 className="font-display font-semibold text-lg">Food Log</h3>
+        {/* FOOD LOG */}
+        <section className="bg-background rounded-2xl shadow-card p-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+            <h3 className="text-lg font-semibold">Food Log</h3>
+
             <div className="flex items-center gap-3">
               <FilterTabs activeFilter={filter} onFilterChange={setFilter} />
-              <AddFoodDialog onAddFood={handleAddFood} />
+              <AddFoodDialog />
             </div>
           </div>
 
           <div className="space-y-4">
-            {groupedByDate.length > 0 ? (
-              groupedByDate.map(([date, dayEntries]) => (
-                <DaySummary
-                  key={date}
-                  date={date}
-                  entries={dayEntries}
-                  isToday={date === today}
-                />
+            {entries.length > 0 ? (
+              entries.map((food) => (
+                <div
+                  key={food.uuid}
+                  className="flex items-center gap-4 p-4 rounded-xl bg-card shadow-card"
+                >
+                  <img
+                    src={food.imageUrl}
+                    alt={food.name}
+                    className="w-14 h-14 rounded-lg object-cover"
+                  />
+
+                  <div className="flex-1">
+                    <h4 className="font-semibold">
+                      {food.name || 'Unknown Food'}
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {food.calories} kcal · {food.protein}g protein ·{' '}
+                      {food.carbs}g carbs · {food.fat}g fat
+                    </p>
+                  </div>
+                </div>
               ))
             ) : (
-              <div className="text-center py-12 bg-card rounded-xl shadow-card">
-                <p className="text-muted-foreground">No entries for this period</p>
+              <div className="text-center py-16 border border-dashed rounded-xl">
+                <p className="text-muted-foreground">
+                  No food entries yet 🍽️
+                </p>
               </div>
             )}
           </div>

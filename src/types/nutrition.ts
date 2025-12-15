@@ -1,15 +1,22 @@
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
 export interface FoodEntry {
-  id: string;
+  uuid: string;
   name: string;
+  imageUrl: string;
+
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
-  date: string;
-  time: string;
-  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-  photo?: string;
+  fiber: number;
+
+  date?: string;
+  time?: string;
+  mealType?: MealType ;
 }
+
+
 
 export interface DailySummary {
   date: string;
