@@ -1,11 +1,25 @@
 import { Leaf, Settings, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
+import { logoutUser } from '@/api/userApi';
+import { UserMenuCard } from './UserMenuCard';
+
+import { useNavigate } from 'react-router-dom';
 
 export function Header() {
+  const navigate = useNavigate();
+  const [showMenu, setShowMenu] = useState(false);
+
+  const handleLogout = async () => {
+    await logoutUser();
+    navigate('/login');
+  };
+
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
+          {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
               <Leaf className="w-5 h-5 text-primary-foreground" />
@@ -15,14 +29,27 @@ export function Header() {
               <p className="text-xs text-muted-foreground">Smart nutrition tracking</p>
             </div>
           </div>
-          
-          <div className="flex items-center gap-2">
+
+          {/* Actions */}
+          <div className="relative flex items-center gap-2">
             <Button variant="ghost" size="icon" className="rounded-xl">
               <Settings className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="rounded-xl">
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-xl"
+              onClick={() => setShowMenu(!showMenu)}
+            >
               <User className="w-5 h-5" />
             </Button>
+
+            {showMenu && (
+              <div className="absolute right-0 top-14">
+                <UserMenuCard  onLogout={handleLogout} />
+              </div>
+            )}
           </div>
         </div>
       </div>

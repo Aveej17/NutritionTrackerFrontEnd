@@ -29,6 +29,13 @@ export default function Login() {
       });
 
       localStorage.setItem('token', res.data.token);
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          name: res.data.name,
+          email: res.data.email
+        })
+      );
       navigate('/app');
     } catch (err) {
       setError(
