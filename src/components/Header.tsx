@@ -1,18 +1,26 @@
-import { Leaf, Settings, User } from 'lucide-react';
+import { Leaf, Settings, User, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { logoutUser } from '@/api/userApi';
 import { UserMenuCard } from './UserMenuCard';
-
 import { useNavigate } from 'react-router-dom';
 
 export function Header() {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
 
+  // 🔥 Read once from localStorage
+  const isSubscribed = localStorage.getItem('subscribed') === 'true';
+
   const handleLogout = async () => {
     await logoutUser();
+    localStorage.removeItem('token');
+    localStorage.removeItem('subscribed');
     navigate('/login');
+  };
+
+  const handleUpgrade = () => {
+    navigate('/upgrade'); // or open Razorpay directly
   };
 
   return (
@@ -25,13 +33,28 @@ export function Header() {
               <Leaf className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-display font-bold text-xl text-foreground">NutriTrack</h1>
-              <p className="text-xs text-muted-foreground">Smart nutrition tracking</p>
+              <h1 className="font-display font-bold text-xl text-foreground">
+                NutriTrack
+              </h1>
+              <p className="text-xs text-muted-foreground">
+                Smart nutrition tracking
+              </p>
             </div>
           </div>
 
           {/* Actions */}
           <div className="relative flex items-center gap-2">
+            {/* 🔥 Show only for FREE users */}
+            {!isSubscribed && (
+              <Button
+                onClick={handleUpgrade}
+                className="rounded-xl flex items-center gap-2"
+              >
+                <CreditCard className="w-4 h-4" />
+                Upgrade
+              </Button>
+            )}
+
             <Button variant="ghost" size="icon" className="rounded-xl">
               <Settings className="w-5 h-5" />
             </Button>
@@ -47,7 +70,7 @@ export function Header() {
 
             {showMenu && (
               <div className="absolute right-0 top-14">
-                <UserMenuCard  onLogout={handleLogout} />
+                <UserMenuCard onLogout={handleLogout} />
               </div>
             )}
           </div>
