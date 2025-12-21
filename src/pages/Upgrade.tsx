@@ -36,7 +36,9 @@ export default function Upgrade() {
           },
         });
 
-        localStorage.setItem('subscribed', 'true');
+        const user = JSON.parse(localStorage.getItem("user"));
+        user.isPrimeUser = true;
+        localStorage.setItem("user", JSON.stringify(user));
         alert('🎉 You are now a Premium user!');
         window.location.href = '/app';
       },

@@ -9,13 +9,15 @@ export function Header() {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
 
-  // 🔥 Read once from localStorage
-  const isSubscribed = localStorage.getItem('subscribed') === 'true';
+  // Read once from localStorage
+  const user = localStorage.getItem('user') || '{}';
+  const isSubscribed = JSON.parse(user).isPrimeUser || false;
+
 
   const handleLogout = async () => {
     await logoutUser();
     localStorage.removeItem('token');
-    localStorage.removeItem('subscribed');
+    localStorage.removeItem('user');
     navigate('/login');
   };
 
@@ -44,7 +46,7 @@ export function Header() {
 
           {/* Actions */}
           <div className="relative flex items-center gap-2">
-            {/* 🔥 Show only for FREE users */}
+            {/* Show only for FREE users */}
             {!isSubscribed && (
               <Button
                 onClick={handleUpgrade}

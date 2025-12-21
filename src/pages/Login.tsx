@@ -33,7 +33,8 @@ export default function Login() {
         'user',
         JSON.stringify({
           name: res.data.name,
-          email: res.data.email
+          email: res.data.email,
+          isPrimeUser: res.data.isPrimeUser,
         })
       );
       navigate('/app');
