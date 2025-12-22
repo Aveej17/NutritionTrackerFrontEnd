@@ -35,7 +35,8 @@ export default function Upgrade() {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         });
-
+        
+        localStorage.setItem('token', res.data.token);
         const user = JSON.parse(localStorage.getItem("user"));
         user.isPrimeUser = true;
         localStorage.setItem("user", JSON.stringify(user));

@@ -20,8 +20,8 @@ const Index = () => {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ['foods'],
-    queryFn: fetchFoods,
+    queryKey: ['foods', filter], 
+    queryFn: () => fetchFoods(filter),
   });
 
   /* =======================
