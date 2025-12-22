@@ -8,8 +8,12 @@ import { AddFoodDialog } from '@/components/AddFoodDialog';
 
 import { fetchFoods } from '@/api/foodApi';
 import { TrendingUp, Flame } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+
 
 const Index = () => {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState('today');
 
   /* =======================
@@ -65,11 +69,18 @@ const Index = () => {
 
   if (isError) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-destructive">
-          Failed to load foods. Please try again.
-        </p>
-      </div>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <p className="text-destructive">
+        Failed to load foods. Please try again.
+      </p>
+
+      <button
+        onClick={() => navigate('/login')}
+        className="text-primary underline hover:opacity-80"
+      >
+        Go to Login
+      </button>
+    </div>
     );
   }
 
