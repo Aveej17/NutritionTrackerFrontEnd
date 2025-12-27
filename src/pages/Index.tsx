@@ -5,6 +5,7 @@ import { Header } from '@/components/Header';
 import { NutritionCard } from '@/components/NutritionCard';
 import { FilterTabs } from '@/components/FilterTabs';
 import { AddFoodDialog } from '@/components/AddFoodDialog';
+import { DaySummary } from '@/components/DaySummary';
 
 import { fetchFoods } from '@/api/foodApi';
 import { TrendingUp, Flame } from 'lucide-react';
@@ -20,13 +21,35 @@ const Index = () => {
      Fetch foods from backend
   ======================== */
   const {
-    data: entries = [],
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ['foods', filter], 
-    queryFn: () => fetchFoods(filter),
+  data: entries = [],
+  isFetching,
+  isError,
+} = useQuery({
+  queryKey: ['foods', filter],
+  queryFn: () => fetchFoods(filter),
+  keepPreviousData: true,
+  refetchOnWindowFocus: false,
+});
+
+
+const groupedByDate = useMemo(() => {
+  const map = new Map<string, typeof entries>();
+
+  entries.forEach((e) => {
+    const date = e.date; // must be yyyy-mm-dd
+    if (!map.has(date)) map.set(date, []);
+    map.get(date)!.push(e);
   });
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  return Array.from(map.entries()).map(([date, entries]) => ({
+    date,
+    entries,
+    isToday: date === today,
+  }));
+}, [entries]);
+
 
   /* =======================
      Temporary Daily Goals
@@ -59,13 +82,7 @@ const Index = () => {
   /* =======================
      Loading / Error
   ======================== */
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading your dashboard…</p>
-      </div>
-    );
-  }
+  
 
   if (isError) {
     return (
@@ -159,37 +176,31 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
-            {entries.length > 0 ? (
-              entries.map((food) => (
-                <div
-                  key={food.uuid}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-card shadow-card"
-                >
-                  <img
-                    src={food.imageUrl}
-                    alt={food.name}
-                    className="w-14 h-14 rounded-lg object-cover"
-                  />
+          {/* Small loading indicator */}
+          {isFetching && (
+            <p className="text-sm text-muted-foreground mb-3">
+              Updating entries…
+            </p>
+          )}
 
-                  <div className="flex-1">
-                    <h4 className="font-semibold">
-                      {food.name || 'Unknown Food'}
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      {food.calories} kcal · {food.protein}g protein ·{' '}
-                      {food.carbs}g carbs · {food.fat}g fat
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-16 border border-dashed rounded-xl">
-                <p className="text-muted-foreground">
-                  No food entries yet 🍽️
-                </p>
-              </div>
-            )}
+          
+
+
+          <div className="space-y-4">
+              {groupedByDate.length > 0 ? (
+                    groupedByDate.map((day) => (
+                      <DaySummary
+                        key={day.date}
+                        date={day.date}
+                        entries={day.entries}
+                        isToday={day.isToday}
+                      />
+                    ))
+                  ) : (
+                    <div className="text-center py-16 border border-dashed rounded-xl">
+                      <p className="text-muted-foreground">No food entries yet 🍽️</p>
+                    </div>
+                  )}
           </div>
         </section>
       </main>

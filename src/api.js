@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://nutritiontrackerbackend-production.up.railway.app',
-  // baseURL: 'http://localhost:8080',
+  // baseURL: 'https://nutritiontrackerbackend-production.up.railway.app',
+  baseURL: 'http://localhost:8080',
 });
 
 const AUTH_WHITELIST = [

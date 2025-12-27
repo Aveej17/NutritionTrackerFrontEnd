@@ -40,7 +40,7 @@ export default function Login() {
       navigate('/app');
     } catch (err) {
       setError(
-        err.response?.data?.message || 'Invalid email or password'
+        err.response?.data?.error || 'Invalid email or password'
       );
     } finally {
       setLoading(false);
