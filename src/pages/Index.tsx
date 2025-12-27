@@ -12,6 +12,8 @@ import { ConfigureGoalsDialog } from '@/components/ConfigureGoalsDialog';
 import { fetchFoods } from '@/api/foodApi';
 import { useGoals } from '@/hooks/useDailyGoals';
 import { GoalsOverview } from '@/components/GoalsOverview';
+import { useAuth } from '@/context/AuthContext';
+
 
 
 import { TrendingUp, Flame } from 'lucide-react';
@@ -19,6 +21,7 @@ import { TrendingUp, Flame } from 'lucide-react';
 const Index = () => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<'today' | 'week' | 'month'>('today');
+  const { user } = useAuth();
 
   /* =======================
      Fetch foods
@@ -108,7 +111,7 @@ const Index = () => {
         <section className="mb-8">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <h2 className="text-3xl font-bold">Welcome Chief</h2>
+              <h2 className="text-3xl font-bold">Welcome {user?.name ?? 'Chief'}</h2>
               <p className="text-muted-foreground">
                 Track your meals and stay consistent
               </p>
