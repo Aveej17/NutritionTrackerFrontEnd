@@ -2,17 +2,19 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '@/api';
+import { useAuth } from '@/context/AuthContext';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Apple, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Apple, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState();
+  const [password, setPassword] = useState();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -28,19 +30,13 @@ export default function Login() {
         password,
       });
 
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem(
-        'user',
-        JSON.stringify({
-          name: res.data.name,
-          email: res.data.email,
-          isPrimeUser: res.data.isPrimeUser,
-        })
-      );
+      //pass FULL backend response (matches AuthContext)
+      await login(res.data);
+
       navigate('/app');
     } catch (err) {
       setError(
-        err.response?.data?.message || 'Invalid email or password'
+        err.response?.data?.error || 'Invalid email or password'
       );
     } finally {
       setLoading(false);
@@ -48,7 +44,6 @@ export default function Login() {
   };
 
   return (
-
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-full max-w-md bg-card p-8 rounded-2xl shadow-card">
         <div className="text-center mb-6">

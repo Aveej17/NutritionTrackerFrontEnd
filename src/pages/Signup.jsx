@@ -31,7 +31,7 @@ export default function Signup() {
       navigate('/login');
     } catch (err) {
       setError(
-        err.response?.data?.message || 'Signup failed'
+        err.response?.data?.error || 'Signup failed'
       );
     } finally {
       setLoading(false);

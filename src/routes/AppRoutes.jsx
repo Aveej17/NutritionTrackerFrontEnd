@@ -4,6 +4,7 @@ import Signup from '@/pages/Signup';
 import Index from '@/pages/Index';
 import NotFound from '@/pages/NotFound';
 import Upgrade from '@/pages/Upgrade';
+import ProtectedRoute from '@/routes/ProtectedRoute';
 
 export default function AppRoutes() {
   return (
@@ -11,9 +12,18 @@ export default function AppRoutes() {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/app" element={<Index />} />
-      <Route path="*" element={<NotFound />} />
+
+      <Route
+        path="/app"
+        element={
+          <ProtectedRoute>
+            <Index />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="/upgrade" element={<Upgrade />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
