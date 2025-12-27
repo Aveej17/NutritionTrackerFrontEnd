@@ -96,18 +96,6 @@ const Index = () => {
       </div>
     );
   }
-
-  /* =======================
-     Loading goals guard
-  ======================= */
-  if (goalsLoading || !goals) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading goals...</p>
-      </div>
-    );
-  }
-
   /* =======================
      UI
   ======================= */
@@ -141,7 +129,8 @@ const Index = () => {
               <h3 className="text-lg font-semibold">Nutrition Overview</h3>
             </div>
 
-            {goals.editable ? (
+            {!goalsLoading && goals && (
+              goals.editable ? (
                 <div className="flex items-center gap-3">
                   <p className="text-sm text-muted-foreground">
                     Customize your daily nutrition goals
@@ -165,17 +154,31 @@ const Index = () => {
                     Upgrade
                   </button>
                 </div>
-              )}
-
+              )
+            )}
           </div>
-          <GoalsOverview totals={totals} goals={goals} />
-          <ConfigureGoalsDialog
-            open={open}
-            onClose={() => setOpen(false)}
-            goals={goals}
-          />
-        </section>
 
+          {/* Goals content */}
+          {goalsLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="h-32 bg-muted animate-pulse rounded-xl"
+                />
+              ))}
+            </div>
+          ) : goals ? (
+            <>
+              <GoalsOverview totals={totals} goals={goals} />
+              <ConfigureGoalsDialog
+                open={open}
+                onClose={() => setOpen(false)}
+                goals={goals}
+              />
+            </>
+          ) : null}
+        </section>
         {/* FOOD LOG */}
         <section className="bg-background rounded-2xl shadow-card p-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
