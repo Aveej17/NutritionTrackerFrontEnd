@@ -1,24 +1,20 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchDailyGoals, updateDailyGoals } from '@/api/goalsApi';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchGoals, updateGoals } from '@/api/goalApi';
 
-export const useDailyGoals = () => {
+export const useGoals = () => {
+  return useQuery({
+    queryKey: ['goals'],
+    queryFn: fetchGoals,
+  });
+};
+
+export const useUpdateGoals = () => {
   const queryClient = useQueryClient();
 
-  const goalsQuery = useQuery({
-    queryKey: ['daily-goals'],
-    queryFn: fetchDailyGoals,
-  });
-
-  const updateGoals = useMutation({
-    mutationFn: updateDailyGoals,
+  return useMutation({
+    mutationFn: updateGoals,
     onSuccess: () => {
-      queryClient.invalidateQueries(['daily-goals']);
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
     },
   });
-
-  return {
-    goals: goalsQuery.data,
-    isLoading: goalsQuery.isLoading,
-    updateGoals,
-  };
 };

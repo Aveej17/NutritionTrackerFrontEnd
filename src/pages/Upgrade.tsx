@@ -1,76 +1,57 @@
-import { CheckCircle, Crown } from 'lucide-react';
+import { CheckCircle, Crown, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import api from '@/api';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Upgrade() {
-  const isSubscribed = localStorage.getItem('subscribed') === 'true';
+  const navigate = useNavigate();
+  const { user, login } = useAuth();
+
+  const isSubscribed = user?.isPremium;
 
   const handleUpgrade = async () => {
-  try {
-    
-    const res = await api.post(
-      '/api/payment/create-order',
-      {}, 
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      }
-    );
+    try {
+      const res = await api.post('/api/payment/create-order');
+      const order = res.data;
 
-    const order = res.data; 
+      const options = {
+        key: 'rzp_test_RtwnS0QXvCxB1H',
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.orderId,
+        name: 'NutriTrack Premium',
+        description: 'Unlimited nutrition tracking',
 
-    const options = {
-      key: 'rzp_test_RtwnS0QXvCxB1H',
-      amount: order.amount,
-      currency: order.currency,
-      order_id: order.orderId,
-      name: 'NutriTrack Premium',
-      description: 'Unlimited nutrition tracking',
-
-      handler: async function (response: any) {
-        
-        await api.post('/api/payment/verify', response, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        
-        localStorage.setItem('token', res.data.token);
-        const user = JSON.parse(localStorage.getItem("user"));
-        user.isPrimeUser = true;
-        localStorage.setItem("user", JSON.stringify(user));
-        alert('🎉 You are now a Premium user!');
-        window.location.href = '/app';
-      },
-
-      modal: {
-        ondismiss: function () {
-          
-          console.log('Payment popup closed by user');
-          alert('Payment cancelled. You can upgrade anytime.');
-
-          
-          api.post(
-            '/api/payment/cancel',
-            { orderId: order.orderId },
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
-              },
-            }
+        handler: async function (response: any) {
+          // verify payment
+          const verifyRes = await api.post(
+            '/api/payment/verify',
+            response
           );
-        },
-      },
-    };
-    // @ts-ignore
-    new window.Razorpay(options).open();
-  } catch (err) {
-    console.error('Payment failed', err);
-    alert('Payment failed. Please try again.');
-  }
-};
 
+          await login(verifyRes.data);
+          navigate('/app');
+        },
+
+        modal: {
+          ondismiss: function () {
+            alert('Payment cancelled. You can upgrade anytime.');
+          },
+        },
+      };
+
+      // @ts-ignore
+      new window.Razorpay(options).open();
+    } catch (err) {
+      console.error('Payment failed', err);
+      alert('Payment failed. Please try again.');
+    }
+  };
+
+  /* =======================
+     Already premium
+  ======================= */
   if (isSubscribed) {
     return (
       <div className="container mx-auto max-w-xl py-20 text-center">
@@ -79,17 +60,38 @@ export default function Upgrade() {
         <p className="text-muted-foreground mt-2">
           Enjoy unlimited access to all features.
         </p>
+
+        <Button
+          variant="ghost"
+          className="mt-6 flex items-center gap-2 mx-auto"
+          onClick={() => navigate('/app')}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to App
+        </Button>
       </div>
     );
   }
 
+  /* =======================
+     Upgrade UI
+  ======================= */
   return (
     <div className="container mx-auto max-w-4xl py-16">
+      {/* Back button */}
+      <button
+        onClick={() => navigate('/app')}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to App
+      </button>
+
       <div className="text-center mb-12">
         <Crown className="w-16 h-16 text-primary mx-auto mb-4" />
         <h1 className="text-3xl font-bold">Upgrade to Premium</h1>
         <p className="text-muted-foreground mt-2">
-          Unlock the full power of NutriTrack 🚀
+          Unlock the full power of NutriTrack
         </p>
       </div>
 
@@ -105,11 +107,11 @@ export default function Upgrade() {
           </li>
           <li className="flex items-center gap-3">
             <CheckCircle className="text-green-500 w-5 h-5" />
-            Advanced nutrition analytics
+            Custom daily nutrition goals
           </li>
           <li className="flex items-center gap-3">
             <CheckCircle className="text-green-500 w-5 h-5" />
-            Priority support
+            Advanced analytics & insights
           </li>
           <li className="flex items-center gap-3">
             <CheckCircle className="text-green-500 w-5 h-5" />
@@ -128,7 +130,7 @@ export default function Upgrade() {
             className="rounded-xl px-10"
             onClick={handleUpgrade}
           >
-            Upgrade Now 🚀
+            Upgrade Now
           </Button>
         </div>
       </div>

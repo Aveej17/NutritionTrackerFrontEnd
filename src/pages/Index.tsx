@@ -1,70 +1,69 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 
 import { Header } from '@/components/Header';
 import { NutritionCard } from '@/components/NutritionCard';
 import { FilterTabs } from '@/components/FilterTabs';
 import { AddFoodDialog } from '@/components/AddFoodDialog';
 import { DaySummary } from '@/components/DaySummary';
+import { ConfigureGoalsDialog } from '@/components/ConfigureGoalsDialog';
 
 import { fetchFoods } from '@/api/foodApi';
+import { useGoals } from '@/hooks/useDailyGoals';
+import { GoalsOverview } from '@/components/GoalsOverview';
+
+
 import { TrendingUp, Flame } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-
-
 
 const Index = () => {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState('today');
+  const [filter, setFilter] = useState<'today' | 'week' | 'month'>('today');
 
   /* =======================
-     Fetch foods from backend
-  ======================== */
+     Fetch foods
+  ======================= */
   const {
-  data: entries = [],
-  isFetching,
-  isError,
-} = useQuery({
-  queryKey: ['foods', filter],
-  queryFn: () => fetchFoods(filter),
-  keepPreviousData: true,
-  refetchOnWindowFocus: false,
-});
-
-
-const groupedByDate = useMemo(() => {
-  const map = new Map<string, typeof entries>();
-
-  entries.forEach((e) => {
-    const date = e.date; // must be yyyy-mm-dd
-    if (!map.has(date)) map.set(date, []);
-    map.get(date)!.push(e);
+    data: entries = [],
+    isFetching,
+    isError,
+  } = useQuery({
+    queryKey: ['foods', filter],
+    queryFn: () => fetchFoods(filter),
+    keepPreviousData: true,
+    refetchOnWindowFocus: false,
   });
 
-  const today = new Date().toISOString().slice(0, 10);
-
-  return Array.from(map.entries()).map(([date, entries]) => ({
-    date,
-    entries,
-    isToday: date === today,
-  }));
-}, [entries]);
-
+  /* =======================
+     Fetch goals
+  ======================= */
+  const { data: goals, isLoading: goalsLoading } = useGoals();
+  const [open, setOpen] = useState(false);
 
   /* =======================
-     Temporary Daily Goals
-     (until backend exists)
-  ======================== */
-  const dailyGoals = {
-    calories: 2000,
-    protein: 120,
-    carbs: 250,
-    fat: 70,
-  };
+     Group entries by date
+  ======================= */
+  const groupedByDate = useMemo(() => {
+    const map = new Map<string, typeof entries>();
+
+    entries.forEach((e) => {
+      const date = e.date;
+      if (!map.has(date)) map.set(date, []);
+      map.get(date)!.push(e);
+    });
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    return Array.from(map.entries()).map(([date, entries]) => ({
+      date,
+      entries,
+      isToday: date === today,
+    }));
+  }, [entries]);
 
   /* =======================
      Totals
-  ======================== */
+  ======================= */
   const totals = useMemo(() => {
     return entries.reduce(
       (acc, e) => ({
@@ -80,30 +79,38 @@ const groupedByDate = useMemo(() => {
   const streak = 7;
 
   /* =======================
-     Loading / Error
-  ======================== */
-  
-
+     Error handling
+  ======================= */
   if (isError) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-      <p className="text-destructive">
-        Failed to load foods. Please try again.
-      </p>
+        <p className="text-destructive">
+          Failed to load foods. Please try again.
+        </p>
+        <button
+          onClick={() => navigate('/login')}
+          className="text-primary underline hover:opacity-80"
+        >
+          Go to Login
+        </button>
+      </div>
+    );
+  }
 
-      <button
-        onClick={() => navigate('/login')}
-        className="text-primary underline hover:opacity-80"
-      >
-        Go to Login
-      </button>
-    </div>
+  /* =======================
+     Loading goals guard
+  ======================= */
+  if (goalsLoading || !goals) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading goals...</p>
+      </div>
     );
   }
 
   /* =======================
      UI
-  ======================== */
+  ======================= */
   return (
     <div className="min-h-screen bg-muted/30">
       <Header />
@@ -113,7 +120,7 @@ const groupedByDate = useMemo(() => {
         <section className="mb-8">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <h2 className="text-3xl font-bold">Welcome Cheif</h2>
+              <h2 className="text-3xl font-bold">Welcome Chief</h2>
               <p className="text-muted-foreground">
                 Track your meals and stay consistent
               </p>
@@ -128,41 +135,45 @@ const groupedByDate = useMemo(() => {
 
         {/* OVERVIEW */}
         <section className="mb-10">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold">Nutrition Overview</h3>
-          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-semibold">Nutrition Overview</h3>
+            </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <NutritionCard
-              label="Calories"
-              value={totals.calories}
-              goal={dailyGoals.calories}
-              unit="kcal"
-              color="calories"
-            />
-            <NutritionCard
-              label="Protein"
-              value={totals.protein}
-              goal={dailyGoals.protein}
-              unit="g"
-              color="protein"
-            />
-            <NutritionCard
-              label="Carbs"
-              value={totals.carbs}
-              goal={dailyGoals.carbs}
-              unit="g"
-              color="carbs"
-            />
-            <NutritionCard
-              label="Fat"
-              value={totals.fat}
-              goal={dailyGoals.fat}
-              unit="g"
-              color="fat"
-            />
+            {goals.editable ? (
+                <div className="flex items-center gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    Customize your daily nutrition goals
+                  </p>
+                  <button
+                    onClick={() => setOpen(true)}
+                    className="text-sm font-medium text-primary hover:underline"
+                  >
+                    Customize
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    Upgrade to unlock advanced goal customization
+                  </p>
+                  <button
+                    onClick={() => navigate('/upgrade')}
+                    className="text-sm font-medium text-primary hover:underline"
+                  >
+                    Upgrade
+                  </button>
+                </div>
+              )}
+
           </div>
+          <GoalsOverview totals={totals} goals={goals} />
+          <ConfigureGoalsDialog
+            open={open}
+            onClose={() => setOpen(false)}
+            goals={goals}
+          />
         </section>
 
         {/* FOOD LOG */}
@@ -171,36 +182,37 @@ const groupedByDate = useMemo(() => {
             <h3 className="text-lg font-semibold">Food Log</h3>
 
             <div className="flex items-center gap-3">
-              <FilterTabs activeFilter={filter} onFilterChange={setFilter} />
+              <FilterTabs
+                activeFilter={filter}
+                onFilterChange={setFilter}
+              />
               <AddFoodDialog />
             </div>
           </div>
 
-          {/* Small loading indicator */}
           {isFetching && (
             <p className="text-sm text-muted-foreground mb-3">
               Updating entries…
             </p>
           )}
 
-          
-
-
           <div className="space-y-4">
-              {groupedByDate.length > 0 ? (
-                    groupedByDate.map((day) => (
-                      <DaySummary
-                        key={day.date}
-                        date={day.date}
-                        entries={day.entries}
-                        isToday={day.isToday}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-16 border border-dashed rounded-xl">
-                      <p className="text-muted-foreground">No food entries yet 🍽️</p>
-                    </div>
-                  )}
+            {groupedByDate.length > 0 ? (
+              groupedByDate.map((day) => (
+                <DaySummary
+                  key={day.date}
+                  date={day.date}
+                  entries={day.entries}
+                  isToday={day.isToday}
+                />
+              ))
+            ) : (
+              <div className="text-center py-16 border border-dashed rounded-xl">
+                <p className="text-muted-foreground">
+                  No food entries yet 🍽️
+                </p>
+              </div>
+            )}
           </div>
         </section>
       </main>

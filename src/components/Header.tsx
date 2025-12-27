@@ -1,29 +1,51 @@
 import { Leaf, Settings, User, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
-import { logoutUser } from '@/api/userApi';
+import { useEffect, useRef, useState } from 'react';
 import { UserMenuCard } from './UserMenuCard';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
 export function Header() {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // Read once from localStorage
-  const user = localStorage.getItem('user') || '{}';
-  const isSubscribed = JSON.parse(user).isPrimeUser || false;
-
-
-  const handleLogout = async () => {
-    await logoutUser();
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
+  const { user } = useAuth();
+  const isSubscribed = user?.isPremium ?? false;
 
   const handleUpgrade = () => {
-    navigate('/upgrade'); // or open Razorpay directly
+    navigate('/upgrade');
   };
+
+  /* =======================
+     Close menu on outside click & ESC
+  ======================= */
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node)
+      ) {
+        setShowMenu(false);
+      }
+    }
+
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setShowMenu(false);
+      }
+    }
+
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEsc);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [showMenu]);
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -46,7 +68,7 @@ export function Header() {
 
           {/* Actions */}
           <div className="relative flex items-center gap-2">
-            {/* Show only for FREE users */}
+            {/* Upgrade CTA for free users */}
             {!isSubscribed && (
               <Button
                 onClick={handleUpgrade}
@@ -65,14 +87,20 @@ export function Header() {
               variant="ghost"
               size="icon"
               className="rounded-xl"
-              onClick={() => setShowMenu(!showMenu)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu((prev) => !prev);
+              }}
             >
               <User className="w-5 h-5" />
             </Button>
 
             {showMenu && (
-              <div className="absolute right-0 top-14">
-                <UserMenuCard onLogout={handleLogout} />
+              <div
+                ref={menuRef}
+                className="absolute right-0 top-14 z-50"
+              >
+                <UserMenuCard onClose={() => setShowMenu(false)} />
               </div>
             )}
           </div>
