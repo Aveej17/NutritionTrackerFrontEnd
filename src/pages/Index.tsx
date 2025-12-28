@@ -9,7 +9,7 @@ import { AddFoodDialog } from '@/components/AddFoodDialog';
 import { DaySummary } from '@/components/DaySummary';
 import { ConfigureGoalsDialog } from '@/components/ConfigureGoalsDialog';
 
-import { fetchFoods } from '@/api/foodApi';
+import { fetchFoods,fetchTodayTotals } from '@/api/foodApi';
 import { useGoals } from '@/hooks/useDailyGoals';
 import { GoalsOverview } from '@/components/GoalsOverview';
 import { useAuth } from '@/context/AuthContext';
@@ -67,17 +67,16 @@ const Index = () => {
   /* =======================
      Totals
   ======================= */
-  const totals = useMemo(() => {
-    return entries.reduce(
-      (acc, e) => ({
-        calories: acc.calories + (e.calories || 0),
-        protein: acc.protein + (e.protein || 0),
-        carbs: acc.carbs + (e.carbs || 0),
-        fat: acc.fat + (e.fat || 0),
-      }),
-      { calories: 0, protein: 0, carbs: 0, fat: 0 }
-    );
-  }, [entries]);
+  const { data: totals = {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+      }} = useQuery({
+        queryKey: ['today-totals'],
+        queryFn: fetchTodayTotals,
+        enabled: filter === 'today',
+      });
 
   const streak = 7;
 
@@ -125,6 +124,7 @@ const Index = () => {
         </section>
 
         {/* OVERVIEW */}
+        {filter === 'today' && (
         <section className="mb-10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
             <div className="flex items-center gap-2">
@@ -181,7 +181,7 @@ const Index = () => {
               />
             </>
           ) : null}
-        </section>
+        </section>)}
         {/* FOOD LOG */}
         <section className="bg-background rounded-2xl shadow-card p-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">

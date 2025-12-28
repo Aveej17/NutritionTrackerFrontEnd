@@ -1,5 +1,6 @@
 // src/utils/foodMapper.js
 export const mapFoodFromBackend = (food) => {
+  const backendDate = food.date ? new Date(food.date) : null;
   return {
     id: food.uuid,                // frontend expects id
     uuid: food.uuid,
@@ -13,9 +14,16 @@ export const mapFoodFromBackend = (food) => {
     fat: Number(food.fat ?? 0),
     fiber: Number(food.fiber ?? 0),
 
-    // 🔑 REQUIRED FALLBACKS
-    date: new Date().toISOString().split('T')[0],
-    time: '--:--',
-    mealType: 'snack',             // default until backend sends it
+    
+    
+    date: backendDate
+      ? backendDate.toISOString().split('T')[0]   // YYYY-MM-DD
+      : null,
+
+    time: backendDate
+      ? backendDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : '--:--',
+
+    mealType: food.mealType??'FoodItem', 
   };
 };
