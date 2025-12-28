@@ -9,10 +9,10 @@ type User = {
 };
 
 type LoginResponse = {
-  token: string;
   name: string;
   email: string;
   isPrimeUser: boolean;
+  token: string;
 };
 
 type AuthContextType = {
@@ -45,8 +45,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.get('/api/auth/me');
       setUser({
-        id: res.data.id,
-        name: res.data.name ?? '',
+        name: res.data.name,
         email: res.data.email,
         isPremium: res.data.isPrimeUser,
       });
@@ -59,8 +58,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (data: LoginResponse) => {
-    localStorage.setItem('token', data.token);
-
+    localStorage.setItem('token', data.token || '');
     setUser({
       name: data.name,
       email: data.email,

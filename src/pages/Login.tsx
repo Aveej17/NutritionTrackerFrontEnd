@@ -13,8 +13,8 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [email, setEmail] = useState();
-  const [password, setPassword] = useState();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,7 +30,6 @@ export default function Login() {
         password,
       });
 
-      //pass FULL backend response (matches AuthContext)
       await login(res.data);
 
       navigate('/app');
@@ -57,7 +56,10 @@ export default function Login() {
             <Input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError('');
+              }}
               required
             />
           </div>
@@ -68,16 +70,25 @@ export default function Login() {
               <Input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setPassword(value);
+                  setError('');
+                }}
                 required
               />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOff /> : <Eye />}
-              </button>
+              {password && (
+                <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                    setShowPassword((prev) => !prev);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2">
+                                
+                  {showPassword ? <EyeOff /> : <Eye />}
+                </button>             
+              )}
             </div>
           </div>
 
