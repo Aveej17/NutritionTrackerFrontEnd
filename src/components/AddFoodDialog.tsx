@@ -59,7 +59,9 @@ export function AddFoodDialog() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      queryClient.invalidateQueries({ queryKey: ['foods'] });
+      ['foods', 'today-totals'].forEach((key) =>
+          queryClient.invalidateQueries({ queryKey: [key] })
+        );
 
       toast({
         title: 'Food uploaded!',
