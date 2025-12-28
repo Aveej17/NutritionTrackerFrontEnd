@@ -19,10 +19,9 @@ export const fetchFoods = async (filter: FilterPeriod = 'today') => {
   return res.data.map(mapFoodFromBackend);
 };
 
-
-
-export const fetchDailyGoals = async () => {
-//   const res = await api.get('/api/users/goals');
-//   return res.data;
-return null;
+export const fetchTodayTotals = async () => {
+  const res = await api.get('/api/foods/totals',{
+    params: { filter: 'today' },
+  });
+  return res.data;
 };
