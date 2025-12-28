@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { Header } from '@/components/Header';
 import { NutritionCard } from '@/components/NutritionCard';
+import { ErrorState } from "@/components/ErrorState";
 import { FilterTabs } from '@/components/FilterTabs';
 import { AddFoodDialog } from '@/components/AddFoodDialog';
 import { DaySummary } from '@/components/DaySummary';
@@ -13,7 +14,7 @@ import { fetchFoods,fetchTodayTotals } from '@/api/foodApi';
 import { useGoals } from '@/hooks/useDailyGoals';
 import { GoalsOverview } from '@/components/GoalsOverview';
 import { useAuth } from '@/context/AuthContext';
-
+import { getDateKey } from '@/utils/date';
 
 
 import { TrendingUp, Flame } from 'lucide-react';
@@ -46,23 +47,36 @@ const Index = () => {
   /* =======================
      Group entries by date
   ======================= */
+
+  // const getDateKey = (date: string) =>
+  // new Intl.DateTimeFormat("en-CA", {
+  //   timeZone: "Asia/Kolkata",
+  //   year: "numeric",
+  //   month: "2-digit",
+  //   day: "2-digit",
+  // }).format(new Date(date)); // yyyy-mm-dd
+
   const groupedByDate = useMemo(() => {
-    const map = new Map<string, typeof entries>();
+  const map = new Map<string, typeof entries>();
 
-    entries.forEach((e) => {
-      const date = e.date;
-      if (!map.has(date)) map.set(date, []);
-      map.get(date)!.push(e);
-    });
+  entries.forEach((e) => {
+    const dateKey = getDateKey(e.date);
+    if (!map.has(dateKey)) map.set(dateKey, []);
+    map.get(dateKey)!.push(e);
+  });
 
-    const today = new Date().toISOString().slice(0, 10);
+  const todayKey = getDateKey(new Date());
 
-    return Array.from(map.entries()).map(([date, entries]) => ({
+  return Array.from(map.entries())
+    .sort(([a], [b]) => b.localeCompare(a)) // newest first
+    .map(([date, entries]) => ({
       date,
       entries,
-      isToday: date === today,
+      isToday: date === todayKey,
     }));
-  }, [entries]);
+}, [entries]);
+
+
 
   /* =======================
      Totals
@@ -84,20 +98,15 @@ const Index = () => {
      Error handling
   ======================= */
   if (isError) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-destructive">
-          Failed to load foods. Please try again.
-        </p>
-        <button
-          onClick={() => navigate('/login')}
-          className="text-primary underline hover:opacity-80"
-        >
-          Go to Login
-        </button>
-      </div>
-    );
-  }
+  return (
+    <ErrorState
+      title="Failed to load data"
+      message="Something went wrong while fetching your foods."
+      actionLabel="Go to Login"
+      onAction={() => navigate("/login")}
+    />
+  );
+}
   /* =======================
      UI
   ======================= */
