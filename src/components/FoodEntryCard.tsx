@@ -44,6 +44,8 @@ export function FoodEntryCard({ entry, delay = 0 }: FoodEntryCardProps) {
     mutationFn: () => deleteFood(entry.uuid),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["foods"] });
+      queryClient.invalidateQueries({ queryKey: ["today-totals"] });
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
       toast({
         title: "Success",
         description: `${entry.name} has been deleted.`,

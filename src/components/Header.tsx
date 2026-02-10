@@ -1,4 +1,5 @@
-import { Leaf, Settings, User, CreditCard } from 'lucide-react';
+import { Leaf, User, CreditCard, Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { useEffect, useRef, useState } from 'react';
 import { UserMenuCard } from './UserMenuCard';
@@ -12,6 +13,12 @@ export function Header() {
 
   const { user } = useAuth();
   const isSubscribed = user?.isPremium ?? false;
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleUpgrade = () => {
     navigate('/upgrade');
@@ -79,8 +86,21 @@ export function Header() {
               </Button>
             )}
 
-            <Button variant="ghost" size="icon" className="rounded-xl">
-              <Settings className="w-5 h-5" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-xl"
+              onClick={() => {
+                if (!mounted) return;
+                setTheme(theme === 'dark' ? 'light' : 'dark');
+              }}
+              title="Toggle theme"
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-5 h-5" />
+              ) : (
+                <Moon className="w-5 h-5" />
+              )}
             </Button>
 
             <Button
