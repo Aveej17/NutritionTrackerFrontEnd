@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,10 +6,11 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useUpdateGoals } from '@/hooks/useDailyGoals';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useUpdateGoals } from "@/hooks/useDailyGoals";
 
 export function ConfigureGoalsDialog({ open, onClose, goals }) {
   const [form, setForm] = useState(goals);
@@ -48,34 +49,50 @@ export function ConfigureGoalsDialog({ open, onClose, goals }) {
         </DialogHeader>
 
         <div className="space-y-3">
-          <Input
-            name="calories"
-            type="number"
-            placeholder="Calories"
-            value={form.calories}
-            onChange={handleChange}
-          />
-          <Input
-            name="protein"
-            type="number"
-            placeholder="Protein (g)"
-            value={form.protein}
-            onChange={handleChange}
-          />
-          <Input
-            name="carbs"
-            type="number"
-            placeholder="Carbs (g)"
-            value={form.carbs}
-            onChange={handleChange}
-          />
-          <Input
-            name="fat"
-            type="number"
-            placeholder="Fat (g)"
-            value={form.fat}
-            onChange={handleChange}
-          />
+          <div className="space-y-1">
+            <Label htmlFor="calories">Calories (kcal)</Label>
+            <Input
+              id="calories"
+              name="calories"
+              type="number"
+              placeholder="Calories"
+              value={form.calories}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="protein">Protein (g)</Label>
+            <Input
+              id="protein"
+              name="protein"
+              type="number"
+              placeholder="Protein (g)"
+              value={form.protein}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="carbs">Carbs (g)</Label>
+            <Input
+              id="carbs"
+              name="carbs"
+              type="number"
+              placeholder="Carbs (g)"
+              value={form.carbs}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="fat">Fat (g)</Label>
+            <Input
+              id="fat"
+              name="fat"
+              type="number"
+              placeholder="Fat (g)"
+              value={form.fat}
+              onChange={handleChange}
+            />
+          </div>
         </div>
 
         <DialogFooter className="mt-4">
@@ -83,7 +100,7 @@ export function ConfigureGoalsDialog({ open, onClose, goals }) {
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={isLoading}>
-            {isLoading ? 'Saving…' : 'Save Goals'}
+            {isLoading ? "Saving…" : "Save Goals"}
           </Button>
         </DialogFooter>
       </DialogContent>
